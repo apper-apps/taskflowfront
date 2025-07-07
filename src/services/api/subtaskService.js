@@ -1,10 +1,8 @@
-import { toast } from "react-toastify";
-import React from "react";
-import Error from "@/components/ui/Error";
+import { toast } from 'react-toastify';
 
-class TaskService {
+class SubtaskService {
   constructor() {
-    this.tableName = 'task';
+    this.tableName = 'subtask';
     this.apperClient = null;
     this.initializeClient();
   }
@@ -21,28 +19,23 @@ class TaskService {
 
   async getAll() {
     try {
-if (!this.apperClient) this.initializeClient();
+      if (!this.apperClient) this.initializeClient();
       
       const params = {
         fields: [
           { field: { Name: "Id" } },
           { field: { Name: "Name" } },
-          { field: { Name: "title" } },
           { field: { Name: "completed" } },
-          { field: { Name: "priority" } },
-          { field: { Name: "due_date" } },
-          { field: { Name: "created_at" } },
-          { field: { Name: "completed_at" } },
-          { field: { Name: "category_id" } },
-          { field: { Name: "notes" } }
+          { field: { Name: "taskId" } }
         ],
         orderBy: [
           {
-            fieldName: "created_at",
-            sorttype: "DESC"
+            fieldName: "Id",
+            sorttype: "ASC"
           }
         ]
       };
+
       const response = await this.apperClient.fetchRecords(this.tableName, params);
       
       if (!response.success) {
@@ -54,43 +47,82 @@ if (!this.apperClient) this.initializeClient();
       if (!response.data || response.data.length === 0) {
         return [];
       }
-// Map database fields to UI format
-      return response.data.map(task => ({
-        Id: task.Id,
-        title: task.title || task.Name || '',
-        completed: task.completed || false,
-        categoryId: task.category_id || null,
-        priority: task.priority || 'medium',
-        dueDate: task.due_date || null,
-        createdAt: task.created_at || new Date().toISOString(),
-        completedAt: task.completed_at || null,
-        notes: task.notes || ''
+
+      return response.data.map(subtask => ({
+        Id: subtask.Id,
+        Name: subtask.Name || '',
+        completed: subtask.completed || false,
+        taskId: subtask.taskId || null
       }));
     } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast.error("Failed to load tasks");
+      console.error("Error fetching subtasks:", error);
+      toast.error("Failed to load subtasks");
+      return [];
+    }
+  }
+
+  async getByTaskId(taskId) {
+    try {
+      if (!this.apperClient) this.initializeClient();
+      
+      const params = {
+        fields: [
+          { field: { Name: "Id" } },
+          { field: { Name: "Name" } },
+          { field: { Name: "completed" } },
+          { field: { Name: "taskId" } }
+        ],
+        where: [
+          {
+            FieldName: "taskId",
+            Operator: "EqualTo",
+            Values: [taskId]
+          }
+        ],
+        orderBy: [
+          {
+            fieldName: "Id",
+            sorttype: "ASC"
+          }
+        ]
+      };
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      if (!response.data || response.data.length === 0) {
+        return [];
+      }
+
+      return response.data.map(subtask => ({
+        Id: subtask.Id,
+        Name: subtask.Name || '',
+        completed: subtask.completed || false,
+        taskId: subtask.taskId || null
+      }));
+    } catch (error) {
+      console.error("Error fetching subtasks for task:", error);
       return [];
     }
   }
 
   async getById(id) {
     try {
-if (!this.apperClient) this.initializeClient();
+      if (!this.apperClient) this.initializeClient();
       
       const params = {
         fields: [
           { field: { Name: "Id" } },
           { field: { Name: "Name" } },
-          { field: { Name: "title" } },
           { field: { Name: "completed" } },
-          { field: { Name: "priority" } },
-          { field: { Name: "due_date" } },
-          { field: { Name: "created_at" } },
-          { field: { Name: "completed_at" } },
-          { field: { Name: "category_id" } },
-          { field: { Name: "notes" } }
+          { field: { Name: "taskId" } }
         ]
       };
+
       const response = await this.apperClient.getRecordById(this.tableName, id, params);
       
       if (!response.success) {
@@ -103,42 +135,29 @@ if (!this.apperClient) this.initializeClient();
         return null;
       }
 
-// Map database fields to UI format
-      const task = response.data;
+      const subtask = response.data;
       return {
-        Id: task.Id,
-        title: task.title || task.Name || '',
-        completed: task.completed || false,
-        categoryId: task.category_id || null,
-        priority: task.priority || 'medium',
-        dueDate: task.due_date || null,
-        createdAt: task.created_at || new Date().toISOString(),
-        completedAt: task.completed_at || null,
-        notes: task.notes || ''
+        Id: subtask.Id,
+        Name: subtask.Name || '',
+        completed: subtask.completed || false,
+        taskId: subtask.taskId || null
       };
     } catch (error) {
-      console.error(`Error fetching task with ID ${id}:`, error);
-      toast.error("Failed to load task");
+      console.error(`Error fetching subtask with ID ${id}:`, error);
+      toast.error("Failed to load subtask");
       return null;
     }
   }
 
-  async create(taskData) {
+  async create(subtaskData) {
     try {
-if (!this.apperClient) this.initializeClient();
+      if (!this.apperClient) this.initializeClient();
       
-      // Map UI fields to database fields (only Updateable fields)
       const params = {
         records: [{
-          Name: taskData.title || '',
-          title: taskData.title || '',
+          Name: subtaskData.Name || '',
           completed: false,
-          priority: taskData.priority || 'medium',
-          due_date: taskData.dueDate || null,
-          created_at: new Date().toISOString(),
-          completed_at: null,
-          category_id: taskData.categoryId || null,
-          notes: taskData.notes || ''
+          taskId: subtaskData.taskId || null
         }]
       };
 
@@ -165,60 +184,38 @@ if (!this.apperClient) this.initializeClient();
           });
         }
         
-if (successfulRecords.length > 0) {
-          const newTask = successfulRecords[0].data;
-          // Map back to UI format
+        if (successfulRecords.length > 0) {
+          const newSubtask = successfulRecords[0].data;
           return {
-            Id: newTask.Id,
-            title: newTask.title || newTask.Name || '',
-            completed: newTask.completed || false,
-            categoryId: newTask.category_id || null,
-            priority: newTask.priority || 'medium',
-            dueDate: newTask.due_date || null,
-            createdAt: newTask.created_at || new Date().toISOString(),
-            completedAt: newTask.completed_at || null,
-            notes: newTask.notes || ''
+            Id: newSubtask.Id,
+            Name: newSubtask.Name || '',
+            completed: newSubtask.completed || false,
+            taskId: newSubtask.taskId || null
           };
         }
       }
       
-      throw new Error("Failed to create task");
+      throw new Error("Failed to create subtask");
     } catch (error) {
-      console.error("Error creating task:", error);
+      console.error("Error creating subtask:", error);
       throw error;
     }
   }
 
-  async update(id, taskData) {
+  async update(id, subtaskData) {
     try {
       if (!this.apperClient) this.initializeClient();
       
-      // Map UI fields to database fields (only Updateable fields)
-      const updateFields = {
-        Id: id
-      };
+      const updateFields = { Id: id };
       
-      if (taskData.title !== undefined) {
-        updateFields.Name = taskData.title;
-        updateFields.title = taskData.title;
+      if (subtaskData.Name !== undefined) {
+        updateFields.Name = subtaskData.Name;
       }
-      if (taskData.completed !== undefined) {
-        updateFields.completed = taskData.completed;
+      if (subtaskData.completed !== undefined) {
+        updateFields.completed = subtaskData.completed;
       }
-      if (taskData.priority !== undefined) {
-        updateFields.priority = taskData.priority;
-      }
-      if (taskData.dueDate !== undefined) {
-        updateFields.due_date = taskData.dueDate;
-      }
-      if (taskData.completedAt !== undefined) {
-        updateFields.completed_at = taskData.completedAt;
-}
-      if (taskData.categoryId !== undefined) {
-        updateFields.category_id = taskData.categoryId;
-      }
-      if (taskData.notes !== undefined) {
-        updateFields.notes = taskData.notes;
+      if (subtaskData.taskId !== undefined) {
+        updateFields.taskId = subtaskData.taskId;
       }
 
       const params = {
@@ -248,26 +245,20 @@ if (successfulRecords.length > 0) {
           });
         }
         
-if (successfulUpdates.length > 0) {
-          const updatedTask = successfulUpdates[0].data;
-          // Map back to UI format
+        if (successfulUpdates.length > 0) {
+          const updatedSubtask = successfulUpdates[0].data;
           return {
-            Id: updatedTask.Id,
-            title: updatedTask.title || updatedTask.Name || '',
-            completed: updatedTask.completed || false,
-            categoryId: updatedTask.category_id || null,
-            priority: updatedTask.priority || 'medium',
-            dueDate: updatedTask.due_date || null,
-            createdAt: updatedTask.created_at || new Date().toISOString(),
-            completedAt: updatedTask.completed_at || null,
-            notes: updatedTask.notes || ''
+            Id: updatedSubtask.Id,
+            Name: updatedSubtask.Name || '',
+            completed: updatedSubtask.completed || false,
+            taskId: updatedSubtask.taskId || null
           };
         }
       }
       
-      throw new Error("Failed to update task");
+      throw new Error("Failed to update subtask");
     } catch (error) {
-      console.error("Error updating task:", error);
+      console.error("Error updating subtask:", error);
       throw error;
     }
   }
@@ -305,10 +296,10 @@ if (successfulUpdates.length > 0) {
       
       return false;
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error("Error deleting subtask:", error);
       throw error;
     }
   }
 }
 
-export const taskService = new TaskService();
+export const subtaskService = new SubtaskService();

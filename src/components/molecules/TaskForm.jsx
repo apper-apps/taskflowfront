@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import ReactMarkdown from 'react-markdown';
 import ApperIcon from '@/components/ApperIcon';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import Select from '@/components/atoms/Select';
-
 const TaskForm = ({ 
   task = null, 
   categories = [], 
@@ -13,29 +13,34 @@ const TaskForm = ({
   onCancel,
   isOpen = false 
 }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: '',
     categoryId: '',
     priority: 'medium',
-    dueDate: ''
+    dueDate: '',
+    notes: ''
   });
+  const [showPreview, setShowPreview] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     if (task) {
       setFormData({
         title: task.title || '',
         categoryId: task.categoryId || '',
         priority: task.priority || 'medium',
-        dueDate: task.dueDate || ''
+        dueDate: task.dueDate || '',
+        notes: task.notes || ''
       });
     } else {
       setFormData({
         title: '',
         categoryId: '',
         priority: 'medium',
-        dueDate: ''
+        dueDate: '',
+        notes: ''
       });
     }
+    setShowPreview(false);
   }, [task, isOpen]);
 
   const handleSubmit = async (e) => {
@@ -152,7 +157,7 @@ const TaskForm = ({
             </div>
           </div>
           
-          <div>
+<div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Due Date
             </label>
@@ -162,6 +167,42 @@ const TaskForm = ({
               onChange={(e) => handleChange('dueDate', e.target.value)}
               className="w-full"
             />
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Notes
+              </label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-xs"
+              >
+                {showPreview ? 'Edit' : 'Preview'}
+              </Button>
+            </div>
+            {showPreview ? (
+              <div className="min-h-[120px] p-3 border border-gray-200 rounded-lg bg-gray-50 prose prose-sm max-w-none">
+                {formData.notes ? (
+                  <ReactMarkdown>{formData.notes}</ReactMarkdown>
+                ) : (
+                  <p className="text-gray-500 italic">No notes added yet</p>
+                )}
+              </div>
+            ) : (
+              <textarea
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                placeholder="Add notes using Markdown syntax..."
+                className="w-full min-h-[120px] p-3 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Supports Markdown: **bold**, *italic*, `code`, [links](url), etc.
+            </p>
           </div>
           
           <div className="flex space-x-3 pt-4">

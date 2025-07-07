@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, isToday, isPast, parseISO } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -5,8 +6,9 @@ import ApperIcon from '@/components/ApperIcon';
 import Checkbox from '@/components/atoms/Checkbox';
 import Badge from '@/components/atoms/Badge';
 import Button from '@/components/atoms/Button';
+import Input from '@/components/atoms/Input';
 import { cn } from '@/utils/cn';
-
+import { subtaskService } from '@/services/api/subtaskService';
 const TaskCard = ({ 
   task, 
   category, 
@@ -15,6 +17,28 @@ const TaskCard = ({
   onDelete,
   className 
 }) => {
+  const [subtasks, setSubtasks] = useState([]);
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const [newSubtaskName, setNewSubtaskName] = useState('');
+  const [loadingSubtasks, setLoadingSubtasks] = useState(false);
+useEffect(() => {
+    if (showSubtasks) {
+      loadSubtasks();
+    }
+  }, [showSubtasks, task.Id]);
+
+  const loadSubtasks = async () => {
+    try {
+      setLoadingSubtasks(true);
+      const data = await subtaskService.getByTaskId(task.Id);
+      setSubtasks(data);
+    } catch (error) {
+      console.error('Failed to load subtasks:', error);
+    } finally {
+      setLoadingSubtasks(false);
+    }
+  };
+
   const handleToggleComplete = async () => {
     try {
       await onToggleComplete(task.Id);
@@ -27,6 +51,50 @@ const TaskCard = ({
     } catch (error) {
       toast.error('Failed to update task');
     }
+  };
+
+  const handleAddSubtask = async () => {
+    if (!newSubtaskName.trim()) return;
+    
+    try {
+      const newSubtask = await subtaskService.create({
+        Name: newSubtaskName,
+        taskId: task.Id,
+        completed: false
+      });
+      setSubtasks(prev => [...prev, newSubtask]);
+      setNewSubtaskName('');
+      toast.success('Subtask added');
+    } catch (error) {
+      toast.error('Failed to add subtask');
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId, completed) => {
+    try {
+      const updatedSubtask = await subtaskService.update(subtaskId, { completed });
+      setSubtasks(prev => prev.map(st => 
+        st.Id === subtaskId ? { ...st, completed } : st
+      ));
+    } catch (error) {
+      toast.error('Failed to update subtask');
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId) => {
+    try {
+      await subtaskService.delete(subtaskId);
+      setSubtasks(prev => prev.filter(st => st.Id !== subtaskId));
+      toast.success('Subtask deleted');
+    } catch (error) {
+      toast.error('Failed to delete subtask');
+    }
+  };
+
+  const getSubtaskProgress = () => {
+    if (subtasks.length === 0) return 0;
+    const completed = subtasks.filter(st => st.completed).length;
+    return Math.round((completed / subtasks.length) * 100);
   };
 
   const handleDelete = async () => {
@@ -135,6 +203,85 @@ const TaskCard = ({
               )}>
                 <ApperIcon name="Calendar" className="w-3 h-3" />
                 <span>{format(parseISO(task.dueDate), 'MMM d')}</span>
+              </div>
+)}
+          </div>
+
+          {/* Subtasks Section */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSubtasks(!showSubtasks)}
+                className="p-1 text-gray-500 hover:text-gray-700"
+              >
+                <ApperIcon name={showSubtasks ? "ChevronUp" : "ChevronDown"} className="w-4 h-4 mr-1" />
+                <span className="text-xs">
+                  Subtasks ({subtasks.length})
+                  {subtasks.length > 0 && ` - ${getSubtaskProgress()}% complete`}
+                </span>
+              </Button>
+              {subtasks.length > 0 && (
+                <div className="w-16 bg-gray-200 rounded-full h-1">
+                  <div 
+                    className="bg-primary h-1 rounded-full transition-all duration-300"
+                    style={{ width: `${getSubtaskProgress()}%` }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {showSubtasks && (
+              <div className="mt-3 space-y-2">
+                {loadingSubtasks ? (
+                  <div className="text-xs text-gray-500 py-2">Loading subtasks...</div>
+                ) : (
+                  <>
+                    {subtasks.map(subtask => (
+                      <div key={subtask.Id} className="flex items-center space-x-2 text-sm">
+                        <Checkbox
+                          checked={subtask.completed}
+                          onChange={(e) => handleToggleSubtask(subtask.Id, e.target.checked)}
+                          className="scale-75"
+                        />
+                        <span className={cn(
+                          "flex-1 text-xs",
+                          subtask.completed && "line-through text-gray-400"
+                        )}>
+                          {subtask.Name}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteSubtask(subtask.Id)}
+                          className="p-1 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <ApperIcon name="Trash2" className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                    
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Input
+                        type="text"
+                        value={newSubtaskName}
+                        onChange={(e) => setNewSubtaskName(e.target.value)}
+                        placeholder="Add subtask..."
+                        className="flex-1 text-xs h-7"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask()}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAddSubtask}
+                        className="p-1 text-primary hover:bg-primary/10"
+                      >
+                        <ApperIcon name="Plus" className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -65,8 +65,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
         </Link>
       </div>
 
-      <div className="p-6">
-        <div className="mb-6">
+<div className="p-6">
+        <div className="mb-6 space-y-2">
           <Link
             to="/"
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-gray-700"
@@ -74,8 +74,14 @@ const Sidebar = ({ isOpen, onToggle }) => {
             <ApperIcon name="Home" className="w-5 h-5" />
             <span className="font-medium">All Tasks</span>
           </Link>
+          <Link
+            to="/statistics"
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-gray-700"
+          >
+            <ApperIcon name="BarChart3" className="w-5 h-5" />
+            <span className="font-medium">Statistics</span>
+          </Link>
         </div>
-
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">

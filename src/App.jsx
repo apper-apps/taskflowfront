@@ -9,6 +9,7 @@ import Sidebar from '@/components/organisms/Sidebar';
 import Header from '@/components/organisms/Header';
 import HomePage from '@/components/pages/HomePage';
 import CategoryPage from '@/components/pages/CategoryPage';
+import StatisticsPage from '@/components/pages/StatisticsPage';
 import Login from '@/components/pages/Login';
 import Signup from '@/components/pages/Signup';
 import Callback from '@/components/pages/Callback';
@@ -139,9 +140,10 @@ function AppContent() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Routes>
+<Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/category/:categoryId" element={<CategoryPage />} />
+                  <Route path="/statistics" element={<StatisticsPage />} />
                 </Routes>
               </motion.div>
             </main>
