@@ -9,6 +9,7 @@ import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import { cn } from '@/utils/cn';
 import { subtaskService } from '@/services/api/subtaskService';
+
 const TaskCard = ({ 
   task, 
   category, 
@@ -21,25 +22,36 @@ const TaskCard = ({
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [newSubtaskName, setNewSubtaskName] = useState('');
   const [loadingSubtasks, setLoadingSubtasks] = useState(false);
-useEffect(() => {
-    if (showSubtasks) {
+
+  // Ensure task exists and has required properties
+  if (!task) {
+    return null;
+  }
+
+  useEffect(() => {
+    if (showSubtasks && task?.Id) {
       loadSubtasks();
     }
-  }, [showSubtasks, task.Id]);
+  }, [showSubtasks, task?.Id]);
 
   const loadSubtasks = async () => {
+    if (!task?.Id) return;
+    
     try {
       setLoadingSubtasks(true);
       const data = await subtaskService.getByTaskId(task.Id);
-      setSubtasks(data);
+      setSubtasks(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load subtasks:', error);
+      setSubtasks([]);
     } finally {
       setLoadingSubtasks(false);
     }
   };
 
   const handleToggleComplete = async () => {
+    if (!task?.Id || !onToggleComplete) return;
+    
     try {
       await onToggleComplete(task.Id);
       if (!task.completed) {
@@ -49,12 +61,13 @@ useEffect(() => {
         });
       }
     } catch (error) {
+      console.error('Failed to toggle task completion:', error);
       toast.error('Failed to update task');
     }
   };
 
   const handleAddSubtask = async () => {
-    if (!newSubtaskName.trim()) return;
+    if (!newSubtaskName.trim() || !task?.Id) return;
     
     try {
       const newSubtask = await subtaskService.create({
@@ -62,47 +75,63 @@ useEffect(() => {
         taskId: task.Id,
         completed: false
       });
-      setSubtasks(prev => [...prev, newSubtask]);
-      setNewSubtaskName('');
-      toast.success('Subtask added');
+      
+      if (newSubtask) {
+        setSubtasks(prev => [...prev, newSubtask]);
+        setNewSubtaskName('');
+        toast.success('Subtask added');
+      }
     } catch (error) {
+      console.error('Failed to add subtask:', error);
       toast.error('Failed to add subtask');
     }
   };
 
-  const handleToggleSubtask = async (subtaskId, completed) => {
+  const handleToggleSubtask = async (subtaskId, newCheckedValue) => {
+    if (!subtaskId) return;
+    
     try {
-      const updatedSubtask = await subtaskService.update(subtaskId, { completed });
+      const updatedSubtask = await subtaskService.update(subtaskId, { 
+        completed: newCheckedValue 
+      });
+      
       setSubtasks(prev => prev.map(st => 
-        st.Id === subtaskId ? { ...st, completed } : st
+        st.Id === subtaskId ? { ...st, completed: newCheckedValue } : st
       ));
     } catch (error) {
+      console.error('Failed to update subtask:', error);
       toast.error('Failed to update subtask');
     }
   };
 
   const handleDeleteSubtask = async (subtaskId) => {
+    if (!subtaskId) return;
+    
     try {
       await subtaskService.delete(subtaskId);
       setSubtasks(prev => prev.filter(st => st.Id !== subtaskId));
       toast.success('Subtask deleted');
     } catch (error) {
+      console.error('Failed to delete subtask:', error);
       toast.error('Failed to delete subtask');
     }
   };
 
   const getSubtaskProgress = () => {
-    if (subtasks.length === 0) return 0;
-    const completed = subtasks.filter(st => st.completed).length;
+    if (!Array.isArray(subtasks) || subtasks.length === 0) return 0;
+    const completed = subtasks.filter(st => st?.completed === true).length;
     return Math.round((completed / subtasks.length) * 100);
   };
 
   const handleDelete = async () => {
+    if (!task?.Id || !onDelete) return;
+    
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
         await onDelete(task.Id);
         toast.success('Task deleted');
       } catch (error) {
+        console.error('Failed to delete task:', error);
         toast.error('Failed to delete task');
       }
     }
@@ -118,12 +147,18 @@ useEffect(() => {
   };
 
   const getDueDateStatus = () => {
-    if (!task.dueDate) return null;
+    // Use correct database field name 'due_date'
+    if (!task?.due_date) return null;
     
-    const dueDate = parseISO(task.dueDate);
-    if (isToday(dueDate)) return 'today';
-    if (isPast(dueDate)) return 'overdue';
-    return 'upcoming';
+    try {
+      const dueDate = parseISO(task.due_date);
+      if (isToday(dueDate)) return 'today';
+      if (isPast(dueDate)) return 'overdue';
+      return 'upcoming';
+    } catch (error) {
+      console.error('Invalid date format:', task.due_date);
+      return null;
+    }
   };
 
   const dueDateStatus = getDueDateStatus();
@@ -136,14 +171,14 @@ useEffect(() => {
       whileHover={{ scale: 1.02 }}
       className={cn(
         'bg-surface rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100',
-        task.completed && 'opacity-60',
+        task?.completed && 'opacity-60',
         className
       )}
     >
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0 mt-1">
           <Checkbox
-            checked={task.completed}
+            checked={Boolean(task?.completed)}
             onChange={handleToggleComplete}
             className="task-completion-animation"
           />
@@ -153,16 +188,16 @@ useEffect(() => {
           <div className="flex items-center justify-between mb-2">
             <h3 className={cn(
               'font-medium text-gray-900 truncate',
-              task.completed && 'line-through text-gray-500'
+              task?.completed && 'line-through text-gray-500'
             )}>
-              {task.title}
+              {task?.title || task?.Name || 'Untitled Task'}
             </h3>
             
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(task)}
+                onClick={() => onEdit && onEdit(task)}
                 className="p-1 hover:bg-gray-100 rounded-lg"
               >
                 <ApperIcon name="Edit2" className="w-4 h-4" />
@@ -184,17 +219,19 @@ useEffect(() => {
               <div className="flex items-center space-x-1">
                 <div 
                   className="w-2 h-2 rounded-full animate-pulse-glow"
-                  style={{ backgroundColor: category.color }}
+                  style={{ backgroundColor: category.color || '#5B46F0' }}
                 />
-                <span className="text-gray-600">{category.name}</span>
+                <span className="text-gray-600">{category.name || category.Name}</span>
               </div>
             )}
             
-            <Badge variant={getPriorityColor(task.priority)} size="sm">
-              {task.priority}
-            </Badge>
+            {task?.priority && (
+              <Badge variant={getPriorityColor(task.priority)} size="sm">
+                {task.priority}
+              </Badge>
+            )}
             
-            {task.dueDate && (
+            {task?.due_date && (
               <div className={cn(
                 'flex items-center space-x-1 px-2 py-1 rounded-full text-xs',
                 dueDateStatus === 'overdue' && 'bg-red-100 text-red-700',
@@ -202,9 +239,11 @@ useEffect(() => {
                 dueDateStatus === 'upcoming' && 'bg-blue-100 text-blue-700'
               )}>
                 <ApperIcon name="Calendar" className="w-3 h-3" />
-                <span>{format(parseISO(task.dueDate), 'MMM d')}</span>
+                <span>
+                  {format(parseISO(task.due_date), 'MMM d')}
+                </span>
               </div>
-)}
+            )}
           </div>
 
           {/* Subtasks Section */}
@@ -216,7 +255,10 @@ useEffect(() => {
                 onClick={() => setShowSubtasks(!showSubtasks)}
                 className="p-1 text-gray-500 hover:text-gray-700"
               >
-                <ApperIcon name={showSubtasks ? "ChevronUp" : "ChevronDown"} className="w-4 h-4 mr-1" />
+                <ApperIcon 
+                  name={showSubtasks ? "ChevronUp" : "ChevronDown"} 
+                  className="w-4 h-4 mr-1" 
+                />
                 <span className="text-xs">
                   Subtasks ({subtasks.length})
                   {subtasks.length > 0 && ` - ${getSubtaskProgress()}% complete`}
@@ -238,29 +280,33 @@ useEffect(() => {
                   <div className="text-xs text-gray-500 py-2">Loading subtasks...</div>
                 ) : (
                   <>
-{subtasks.map(subtask => (
-                      <div key={subtask.Id} className="flex items-center space-x-2 text-sm">
-<Checkbox
-                          checked={Boolean(subtask?.completed)}
-                          onChange={(e) => subtask?.Id && handleToggleSubtask(subtask.Id, e.target.checked)}
-                          className="scale-75"
-                        />
-                        <span className={cn(
-                          "flex-1 text-xs",
-                          subtask.completed && "line-through text-gray-400"
-                        )}>
-                          {subtask.Name}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteSubtask(subtask.Id)}
-                          className="p-1 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <ApperIcon name="Trash2" className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
+                    {Array.isArray(subtasks) && subtasks.map(subtask => {
+                      if (!subtask?.Id) return null;
+                      
+                      return (
+                        <div key={subtask.Id} className="flex items-center space-x-2 text-sm">
+                          <Checkbox
+                            checked={Boolean(subtask.completed)}
+                            onChange={(newCheckedValue) => handleToggleSubtask(subtask.Id, newCheckedValue)}
+                            className="scale-75"
+                          />
+                          <span className={cn(
+                            "flex-1 text-xs",
+                            subtask.completed && "line-through text-gray-400"
+                          )}>
+                            {subtask.Name || 'Unnamed Subtask'}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSubtask(subtask.Id)}
+                            className="p-1 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <ApperIcon name="Trash2" className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                     
                     <div className="flex items-center space-x-2 mt-2">
                       <Input
