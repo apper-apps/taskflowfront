@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-toastify';
-import ApperIcon from '@/components/ApperIcon';
-import Button from '@/components/atoms/Button';
-import TaskCard from '@/components/molecules/TaskCard';
-import TaskForm from '@/components/molecules/TaskForm';
-import FilterBar from '@/components/molecules/FilterBar';
-import Loading from '@/components/ui/Loading';
-import Error from '@/components/ui/Error';
-import Empty from '@/components/ui/Empty';
-import { useTasks } from '@/hooks/useTasks';
-import { useCategories } from '@/hooks/useTasks';
+import React, { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "react-toastify";
+import { useTasks } from "@/hooks/useTasks";
+import { useCategories } from "@/hooks/useCategories";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Empty from "@/components/ui/Empty";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import FilterBar from "@/components/molecules/FilterBar";
+import TaskCard from "@/components/molecules/TaskCard";
+import TaskForm from "@/components/molecules/TaskForm";
 
-const TaskList = ({ selectedCategoryId = null }) => {
+export default function TaskList({ selectedCategoryId }) {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,5 +190,3 @@ const TaskList = ({ selectedCategoryId = null }) => {
     </div>
   );
 };
-
-export default TaskList;
