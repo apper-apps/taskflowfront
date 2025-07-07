@@ -1,0 +1,30 @@
+[
+  {
+    "Id": 1,
+    "name": "Work",
+    "color": "#5B46F0",
+    "taskCount": 3,
+    "createdAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "Personal",
+    "color": "#22C55E",
+    "taskCount": 2,
+    "createdAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "Id": 3,
+    "name": "Health",
+    "color": "#EF4444",
+    "taskCount": 1,
+    "createdAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "Id": 4,
+    "name": "Learning",
+    "color": "#3B82F6",
+    "taskCount": 2,
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+]

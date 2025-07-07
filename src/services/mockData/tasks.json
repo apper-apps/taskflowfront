@@ -1,0 +1,82 @@
+[
+  {
+    "Id": 1,
+    "title": "Review quarterly reports",
+    "completed": false,
+    "categoryId": 1,
+    "priority": "high",
+    "dueDate": "2024-01-15",
+    "createdAt": "2024-01-08T10:00:00Z",
+    "completedAt": null
+  },
+  {
+    "Id": 2,
+    "title": "Update project documentation",
+    "completed": false,
+    "categoryId": 1,
+    "priority": "medium",
+    "dueDate": "2024-01-20",
+    "createdAt": "2024-01-08T11:30:00Z",
+    "completedAt": null
+  },
+  {
+    "Id": 3,
+    "title": "Plan weekend trip",
+    "completed": true,
+    "categoryId": 2,
+    "priority": "low",
+    "dueDate": "2024-01-12",
+    "createdAt": "2024-01-05T09:15:00Z",
+    "completedAt": "2024-01-10T16:20:00Z"
+  },
+  {
+    "Id": 4,
+    "title": "Buy groceries",
+    "completed": false,
+    "categoryId": 2,
+    "priority": "medium",
+    "dueDate": "2024-01-14",
+    "createdAt": "2024-01-08T08:45:00Z",
+    "completedAt": null
+  },
+  {
+    "Id": 5,
+    "title": "Schedule dentist appointment",
+    "completed": false,
+    "categoryId": 3,
+    "priority": "high",
+    "dueDate": "2024-01-16",
+    "createdAt": "2024-01-07T14:20:00Z",
+    "completedAt": null
+  },
+  {
+    "Id": 6,
+    "title": "Learn React hooks",
+    "completed": false,
+    "categoryId": 4,
+    "priority": "medium",
+    "dueDate": "2024-01-25",
+    "createdAt": "2024-01-08T13:10:00Z",
+    "completedAt": null
+  },
+  {
+    "Id": 7,
+    "title": "Complete online course",
+    "completed": true,
+    "categoryId": 4,
+    "priority": "low",
+    "dueDate": "2024-01-10",
+    "createdAt": "2024-01-03T10:30:00Z",
+    "completedAt": "2024-01-09T18:45:00Z"
+  },
+  {
+    "Id": 8,
+    "title": "Prepare presentation slides",
+    "completed": false,
+    "categoryId": 1,
+    "priority": "high",
+    "dueDate": "2024-01-18",
+    "createdAt": "2024-01-08T15:45:00Z",
+    "completedAt": null
+  }
+]
