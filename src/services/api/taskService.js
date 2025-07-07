@@ -129,7 +129,7 @@ if (!this.apperClient) this.initializeClient();
       
       // Map UI fields to database fields (only Updateable fields)
       const params = {
-        records: [{
+records: [{
           Name: taskData.title || '',
           title: taskData.title || '',
           completed: false,
@@ -137,7 +137,7 @@ if (!this.apperClient) this.initializeClient();
           due_date: taskData.dueDate || null,
           created_at: new Date().toISOString(),
           completed_at: null,
-          category_id: taskData.categoryId || null,
+          category_id: taskData.categoryId ? parseInt(taskData.categoryId, 10) : null,
           notes: taskData.notes || ''
         }]
       };
@@ -194,7 +194,7 @@ if (successfulRecords.length > 0) {
       if (!this.apperClient) this.initializeClient();
       
       // Map UI fields to database fields (only Updateable fields)
-      const updateFields = {
+const updateFields = {
         Id: id
       };
       
@@ -213,9 +213,9 @@ if (successfulRecords.length > 0) {
       }
       if (taskData.completedAt !== undefined) {
         updateFields.completed_at = taskData.completedAt;
-}
+      }
       if (taskData.categoryId !== undefined) {
-        updateFields.category_id = taskData.categoryId;
+        updateFields.category_id = taskData.categoryId ? parseInt(taskData.categoryId, 10) : null;
       }
       if (taskData.notes !== undefined) {
         updateFields.notes = taskData.notes;
