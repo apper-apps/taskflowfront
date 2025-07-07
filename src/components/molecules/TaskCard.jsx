@@ -240,8 +240,8 @@ useEffect(() => {
                   <>
                     {subtasks.map(subtask => (
                       <div key={subtask.Id} className="flex items-center space-x-2 text-sm">
-                        <Checkbox
-                          checked={subtask.completed}
+<Checkbox
+                          checked={subtask?.completed || false}
                           onChange={(e) => handleToggleSubtask(subtask.Id, e.target.checked)}
                           className="scale-75"
                         />
